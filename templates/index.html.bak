@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Login Interface Detection Tool</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl7/1L_dstPt3HV5HzF6Gvk/e3o3Eeh5e5i/8NQU5v5" crossorigin="anonymous">
+        <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+        <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRm7o2QlJ+HI7bgDf5t3tbq/yKMqyp0L/d" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <div id="app" class="container">
+            <h1 class="text-center mb-4">Login Interface Detection Tool</h1>
+            <div v-for="scan in scans" :key="scan.index" class="mb-5">
+            
+            <form @submit.prevent="submitForm(i)">
+                <div class="form-group">
+                    <label for="websites">Websites:</label><br>
+                    <textarea :id="'websites' + scan.index" v-model="scan.websites" rows="4" cols="50" class="form-control"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="wordlist">Wordlist:</label><br>
+                    <input type="text" :id="'wordlist' + scan.index" v-model="scan.wordlist" class="form-control">
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" :id="'use_spider' + scan.index" v-model="scan.use_spider" class="form-check-input">
+                    <label class="form-check-label" :for="'use_spider' + scan.index">Use spider</label>
+                </div>
+                <div class="form-group">
+                    <label for="proxy">Proxy:</label><br>
+                    <input type="text" :id="'proxy' + scan.index" v-model="scan.proxy" class="form-control">
+                </div>
+                <pre> {{ scan.results }} </pre>
+                <input type="submit" value="Start Scan" class="btn btn-primary">
+            </form>
+          
+            <div class="progress mt-3">
+                <div class="progress-bar" role="progressbar" :style="{ width: scan.progress + '%' }" :aria-valuenow="scan.progress" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            
+        </div></div>
+        <button @click="addScan" class="btn btn-secondary">Add Scan</button>
+    </body>
+</html></div><script>
+const socket = io();
+
+const app = new Vue({
+    el: '#app',
+    data: {
+        scans: [
+            {
+                websites: '',
+                wordlist: '',
+                use_spider: false,
+                proxy: '',
+                progress: 0,
+                results: '',
+                index: 0
+            }
+        ]
+    },
+    methods: {
+        addScan() {
+            this.scans.push({
+                websites: '',
+                wordlist: '',
+                use_spider: false,
+                proxy: '',
+                progress: 0,
+                results: '',
+                index:0
+            });
+        },
+        submitForm(index) {
+            const scan = this.scans[index];
+            socket.emit('start_scan', {
+                index: index,
+                websites: scan.websites,
+                wordlist: scan.wordlist,
+                use_spider: scan.use_spider,
+                proxy: scan.proxy
+            });
+        }
+
+
+    }
+});
+socket.on('scan_progress', data => {
+    app.scans[data.index].progress = data.progress;
+});
+
+socket.on('scan_complete', data => {
+    app.scans[data.index].results = data.results;
+});</script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-cn7l7gDp0eyniUwwAZgrzD06kc/tftFf19TOAs2zVinnD/C7E91j9yyk5//jjpt/" crossorigin="anonymous"></script></body></html>
